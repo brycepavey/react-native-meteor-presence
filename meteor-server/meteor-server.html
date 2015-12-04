@@ -1,0 +1,40 @@
+<head>
+  <title>Active Users</title>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Users Active: {{incompleteCount}}</h1>
+
+      {{#if currentUser}}
+          <form class="new-task">
+            <input type="text" name="text" placeholder="Type stuff here for no reason" />
+          </form>
+      {{/if}}
+    </header>
+
+    <ul>
+      {{#each activeUsers}}
+        {{> user}}
+      {{/each}}
+    </ul>
+  </div>
+</body>
+
+<template name="user">
+    <li class="{{#if checked}}checked{{/if}} {{#if private}}private{{/if}}">
+
+      {{#if isOwner}}
+          <button class="toggle-private">
+            {{#if private}}
+              Private
+            {{else}}
+              Public
+            {{/if}}
+          </button>
+      {{/if}}
+
+      <span class="text"><strong>{{username}}</strong> - {{date}}</span>
+    </li>
+</template>
