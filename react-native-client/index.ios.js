@@ -24,7 +24,10 @@ var ddpClient;
 var reactNativeClient = React.createClass({
   getInitialState: function() {
     return {
-      dataSource: new ListView.DataSource({
+      anonDataSource: new ListView.DataSource({
+        rowHasChanged: (row1, row2) => !_.isEqual(row1, row2),
+      }),
+      loggedInDataSource: new ListView.DataSource({
         rowHasChanged: (row1, row2) => !_.isEqual(row1, row2),
       }),
       loaded: false,
@@ -34,18 +37,33 @@ var reactNativeClient = React.createClass({
   componentDidMount: function() {
     ddpClient = new DDPClient({url: 'ws://localhost:3000/websocket'});
 
-    ddpClient.connect(() => ddpClient.subscribe('annonUsers'));
+    ddpClient.connect(() =>
+      {ddpClient.subscribe('anonUsers'),
+      ddpClient.subscribe('loggedInUsers')}
+    );
 
-    // observe the lists collection
-    var observer = ddpClient.observe("annonUsers");
-    observer.added = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.annonUsers)));
-    observer.changed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.annonUsers)));
-    observer.removed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.annonUsers)));
+    // observe the users collections
+    var anonObserver = ddpClient.observe("anonUsers");
+    anonObserver.added = () => this.updateAnonRows(_.cloneDeep(_.values(ddpClient.collections.anonUsers)));
+    anonObserver.changed = () => this.updateAnonRows(_.cloneDeep(_.values(ddpClient.collections.anonUsers)));
+    anonObserver.removed = () => this.updateAnonRows(_.cloneDeep(_.values(ddpClient.collections.anonUsers)));
+
+    var loggedInObserver = ddpClient.observe("loggedInUsers");
+    loggedInObserver.added = () => this.updateLoggedInRows(_.cloneDeep(_.values(ddpClient.collections.loggedInUsers)));
+    loggedInObserver.changed = () => this.updateLoggedInRows(_.cloneDeep(_.values(ddpClient.collections.loggedInUsers)));
+    loggedInObserver.removed = () => this.updateLoggedInRows(_.cloneDeep(_.values(ddpClient.collections.loggedInUsers)));
   },
 
-  updateRows: function(rows) {
+  updateAnonRows: function(rows) {
     this.setState({
-     dataSource: this.state.dataSource.cloneWithRows(rows),
+     anonDataSource: this.state.anonDataSource.cloneWithRows(rows),
+     loaded: true,
+   });
+  },
+
+  updateLoggedInRows: function(rows) {
+    this.setState({
+     loggedInDataSource: this.state.loggedInDataSource.cloneWithRows(rows),
      loaded: true,
    });
   },
@@ -78,7 +96,17 @@ var reactNativeClient = React.createClass({
           </Text>
         </View>
         <ListView
-          dataSource={this.state.dataSource}
+          dataSource={this.state.anonDataSource}
+          renderRow={this.renderList}
+          style={styles.listView}
+        />
+        <View>
+          <Text style={styles.activeUsersHeader}>
+            Logged In Users
+          </Text>
+        </View>
+        <ListView
+          dataSource={this.state.loggedInDataSource}
           renderRow={this.renderList}
           style={styles.listView}
         />

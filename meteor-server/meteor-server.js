@@ -1,29 +1,34 @@
 Tasks = new Mongo.Collection("tasks");
-AnnonUsers = new Mongo.Collection("annonUsers");
+AnonUsers = new Mongo.Collection("anonUsers");
 LoggedInUsers = new Mongo.Collection("loggedInUsers");
 
 
 if(Meteor.isServer) {
     // This code only runs on the server
-    Meteor.publish("annonUsers", function() {
-        return AnnonUsers.find();
+    Meteor.publish("anonUsers", function() {
+        return AnonUsers.find();
+    });
+
+    Meteor.publish("loggedInUsers", function() {
+        return LoggedInUsers.find();
     });
 
     Meteor.startup(function() {
-      AnnonUsers.remove({});
+      AnonUsers.remove({});
+      LoggedInUsers.remove({})
     });
 
     Meteor.onConnection(function(connection){
       var connID = connection.id;
       var loginDate = new Date();
 
-      AnnonUsers.insert({
+      AnonUsers.insert({
         username: connID,
         date: loginDate,
       });
 
       connection.onClose(function(){
-        AnnonUsers.remove({
+        AnonUsers.remove({
           username: connID
         });
       });
@@ -32,23 +37,24 @@ if(Meteor.isServer) {
 
 if (Meteor.isClient) {
   // This code only runs on the client
-  Meteor.subscribe("annonUsers");
+  Meteor.subscribe("anonUsers");
+  Meteor.subscribe("loggedInUsers");
 
   Template.body.helpers({
-    annonUsers: function () {
+    anonUsers: function () {
         if (Session.get("hideCompleted")) {
           // If hide completed is checked, filter tasks
-          return AnnonUsers.find();
+          return AnonUsers.find();
         } else {
           // Otherwise, return all of the tasks
-          return AnnonUsers.find();
+          return AnonUsers.find();
         }
       },
       hideCompleted: function () {
         return Session.get("hideCompleted");
       },
       incompleteCount: function () {
-          return AnnonUsers.find().count();
+          return AnonUsers.find().count();
       }
   });
 
@@ -99,15 +105,13 @@ Meteor.methods({
   addUser: function (user) {
     var annonId = this.connection.id
 
-    AnnonUsers.remove({
+    AnonUsers.remove({
       username: annonId
     });
 
-    AnnonUsers.update(
-        { username: annonId },
-        {
-          username: user
-        }
-    );
+    LoggedInUsers.insert({
+      username: user,
+      date: new Date()
+    })
   },
 });
