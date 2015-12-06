@@ -1,27 +1,29 @@
 Tasks = new Mongo.Collection("tasks");
-ActiveUsers = new Mongo.Collection("activeUsers");
+AnnonUsers = new Mongo.Collection("annonUsers");
+LoggedInUsers = new Mongo.Collection("loggedInUsers");
+
 
 if(Meteor.isServer) {
     // This code only runs on the server
-    Meteor.publish("activeUsers", function() {
-        return ActiveUsers.find();
+    Meteor.publish("annonUsers", function() {
+        return AnnonUsers.find();
     });
 
     Meteor.startup(function() {
-      ActiveUsers.remove({});
+      AnnonUsers.remove({});
     });
 
     Meteor.onConnection(function(connection){
       var connID = connection.id;
       var loginDate = new Date();
 
-      ActiveUsers.insert({
+      AnnonUsers.insert({
         username: connID,
-        date: loginDate
+        date: loginDate,
       });
 
       connection.onClose(function(){
-        ActiveUsers.remove({
+        AnnonUsers.remove({
           username: connID
         });
       });
@@ -30,23 +32,23 @@ if(Meteor.isServer) {
 
 if (Meteor.isClient) {
   // This code only runs on the client
-  Meteor.subscribe("activeUsers");
+  Meteor.subscribe("annonUsers");
 
   Template.body.helpers({
-    activeUsers: function () {
+    annonUsers: function () {
         if (Session.get("hideCompleted")) {
           // If hide completed is checked, filter tasks
-          return ActiveUsers.find();
+          return AnnonUsers.find();
         } else {
           // Otherwise, return all of the tasks
-          return ActiveUsers.find();
+          return AnnonUsers.find();
         }
       },
       hideCompleted: function () {
         return Session.get("hideCompleted");
       },
       incompleteCount: function () {
-          return ActiveUsers.find().count();
+          return AnnonUsers.find().count();
       }
   });
 
@@ -97,9 +99,11 @@ Meteor.methods({
   addUser: function (user) {
     var annonId = this.connection.id
 
+    AnnonUsers.remove({
+      username: annonId
+    });
 
-
-    ActiveUsers.update(
+    AnnonUsers.update(
         { username: annonId },
         {
           username: user

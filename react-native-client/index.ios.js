@@ -34,13 +34,13 @@ var reactNativeClient = React.createClass({
   componentDidMount: function() {
     ddpClient = new DDPClient({url: 'ws://localhost:3000/websocket'});
 
-    ddpClient.connect(() => ddpClient.subscribe('activeUsers'));
+    ddpClient.connect(() => ddpClient.subscribe('annonUsers'));
 
     // observe the lists collection
-    var observer = ddpClient.observe("activeUsers");
-    observer.added = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.activeUsers)));
-    observer.changed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.activeUsers)));
-    observer.removed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.activeUsers)));
+    var observer = ddpClient.observe("annonUsers");
+    observer.added = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.annonUsers)));
+    observer.changed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.annonUsers)));
+    observer.removed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.annonUsers)));
   },
 
   updateRows: function(rows) {

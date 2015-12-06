@@ -7,15 +7,15 @@
     <header>
       <h1>Users Active: {{incompleteCount}}</h1>
 
-      {{#if currentUser}}
-          <form class="new-task">
-            <input type="text" name="text" placeholder="Type stuff here for no reason" />
+      <!-- {{#if currentUser}} -->
+          <form class="change-name">
+            <input type="text" name="text" placeholder="Enter a username" />
           </form>
-      {{/if}}
+      <!-- {{/if}} -->
     </header>
 
     <ul>
-      {{#each activeUsers}}
+      {{#each annonUsers}}
         {{> user}}
       {{/each}}
     </ul>
@@ -25,7 +25,7 @@
 <template name="user">
     <li class="{{#if checked}}checked{{/if}} {{#if private}}private{{/if}}">
 
-      {{#if isOwner}}
+      <!-- {{#if isOwner}}
           <button class="toggle-private">
             {{#if private}}
               Private
@@ -33,7 +33,7 @@
               Public
             {{/if}}
           </button>
-      {{/if}}
+      {{/if}} -->
 
       <span class="text"><strong>{{username}}</strong> - {{date}}</span>
     </li>
