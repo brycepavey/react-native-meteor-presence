@@ -6,6 +6,7 @@
 
 var React = require('react-native');
 var {
+  AsyncStorage,
   AppRegistry,
   Image,
   ListView,
@@ -18,7 +19,7 @@ var {
 
 var _ = require('lodash');
 var DDPClient = require("ddp-client");
-var username = '';
+var username;
 var ddpClient;
 
 var reactNativeClient = React.createClass({
@@ -38,8 +39,11 @@ var reactNativeClient = React.createClass({
     ddpClient = new DDPClient({url: 'ws://localhost:3000/websocket'});
 
     ddpClient.connect(() =>
-      {ddpClient.subscribe('anonUsers'),
-      ddpClient.subscribe('loggedInUsers')}
+      {
+        ddpClient.subscribe('anonUsers'),
+        ddpClient.subscribe('loggedInUsers'),
+        this.checkForUser()
+      }
     );
 
     // observe the users collections
@@ -52,6 +56,21 @@ var reactNativeClient = React.createClass({
     loggedInObserver.added = () => this.updateLoggedInRows(_.cloneDeep(_.values(ddpClient.collections.loggedInUsers)));
     loggedInObserver.changed = () => this.updateLoggedInRows(_.cloneDeep(_.values(ddpClient.collections.loggedInUsers)));
     loggedInObserver.removed = () => this.updateLoggedInRows(_.cloneDeep(_.values(ddpClient.collections.loggedInUsers)));
+  },
+
+  saveUserSession: function() {
+    AsyncStorage.setItem("me", "storedUser");
+    console.log("userStored")
+  },
+
+  checkForUser: function() {
+    if(AsyncStorage.getItem("me") !== null) {
+      console.log("user found!");
+      AsyncStorage.getItem("me").then((value) => {console.log(value)});
+    }
+    else {
+      console.log("user not yet set");
+    }
   },
 
   updateAnonRows: function(rows) {
@@ -75,10 +94,6 @@ var reactNativeClient = React.createClass({
 
     return (
       <View style={styles.container}>
-
-        <Text style={styles.loginLabels}>
-          Username
-        </Text>
         <TextInput
           style={styles.loginEntry}
           placeholder="Enter a username"
@@ -92,7 +107,7 @@ var reactNativeClient = React.createClass({
         </TouchableHighlight>
         <View>
           <Text style={styles.activeUsersHeader}>
-            Currently Active Users
+            Anon Users
           </Text>
         </View>
         <ListView
@@ -102,7 +117,7 @@ var reactNativeClient = React.createClass({
         />
         <View>
           <Text style={styles.activeUsersHeader}>
-            Logged In Users
+            Logged in Users
           </Text>
         </View>
         <ListView
@@ -117,14 +132,16 @@ var reactNativeClient = React.createClass({
   logUsername: function(text) {
     this.username = text;
 
-
     console.log(text);
     console.log(this.username.text);
   },
 
   loginUser: function() {
     ddpClient.call('addUser', [this.username.text], function(err, result){
-    })
+    });
+    username = "";
+
+    this.saveUserSession();
   },
 
   renderLoadingView: function() {
@@ -150,10 +167,10 @@ var reactNativeClient = React.createClass({
 var styles = StyleSheet.create({
   activeUsersHeader: {
     flex: 1,
-    alignSelf: 'center',
+    textAlign: 'center',
     fontSize: 20,
-    paddingTop: 100,
-    paddingBottom: 20
+    marginBottom: 20,
+    backgroundColor: "#eeeeee"
   },
   container: {
     padding: 20,
@@ -176,10 +193,15 @@ var styles = StyleSheet.create({
   listView: {
     paddingTop: 2,
     backgroundColor: 'white',
+    marginBottom: 30,
   },
   loginButton: {
     textAlign: 'center',
     flex: 5,
+    backgroundColor: '#E0EAF1',
+    paddingTop: 5,
+    paddingBottom: 5,
+    marginBottom: 50,
   },
   loginLabels: {
     flex: 1,
@@ -190,7 +212,8 @@ var styles = StyleSheet.create({
     borderColor: 'gray',
     borderWidth: 1,
     flex: 5,
-    marginBottom: 20
+    marginBottom: 20,
+    textAlign: 'center'
   }
 });
 

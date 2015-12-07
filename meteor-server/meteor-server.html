@@ -13,9 +13,19 @@
           </form>
       <!-- {{/if}} -->
     </header>
-
+    <h3>
+      Anon Users
+    </h3>
     <ul>
       {{#each anonUsers}}
+        {{> user}}
+      {{/each}}
+    </ul>
+    <h3>
+      Logged in Users
+    </h3>
+    <ul>
+      {{#each loggedInUsers}}
         {{> user}}
       {{/each}}
     </ul>

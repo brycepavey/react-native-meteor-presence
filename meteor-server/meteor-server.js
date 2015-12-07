@@ -22,14 +22,15 @@ if(Meteor.isServer) {
       var connID = connection.id;
       var loginDate = new Date();
 
-      AnonUsers.insert({
-        username: connID,
-        date: loginDate,
-      });
+      Meteor.call('addAnon', [connID], function(err, result){})
 
       connection.onClose(function(){
         AnonUsers.remove({
           username: connID
+        });
+
+        LoggedInUsers.remove({
+          connectionId: connID
         });
       });
     });
@@ -49,14 +50,18 @@ if (Meteor.isClient) {
           // Otherwise, return all of the tasks
           return AnonUsers.find();
         }
-      },
-      hideCompleted: function () {
-        return Session.get("hideCompleted");
-      },
-      incompleteCount: function () {
-          return AnonUsers.find().count();
-      }
+    },
+    loggedInUsers: function () {
+      return LoggedInUsers.find();
+    },
+    hideCompleted: function () {
+      return Session.get("hideCompleted");
+    },
+    incompleteCount: function () {
+        return AnonUsers.find().count() + LoggedInUsers.find().count();
+    }
   });
+
 
   Template.task.helpers({
       isOwnder: function(){
@@ -65,18 +70,18 @@ if (Meteor.isClient) {
   });
 
   Template.body.events({
-    "submit .new-task": function (event) {
+    "submit .change-name": function (event) {
       // Prevent default browser form submit
       event.preventDefault();
 
       // Get value from form element
-      var text = event.target.text.value;
+      var username = event.target.text.value;
 
-      // Insert a task into the collection
-      Meteor.call("addTask", text);
+      // Insert user into the Logged In collection
+      Meteor.call('addAnon', [username], function(err, result){})
 
-      // Clear form
-      event.target.text.value = "";
+      // // Clear form
+      // event.target.text.value = "";
     },
     "change .hide-completed input": function (event) {
       Session.set("hideCompleted", event.target.checked);
@@ -110,7 +115,14 @@ Meteor.methods({
     });
 
     LoggedInUsers.insert({
+      connectionId: annonId,
       username: user,
+      date: new Date()
+    });
+  },
+  addAnon: function(id) {
+    AnonUsers.insert({
+      username: id,
       date: new Date()
     })
   },
